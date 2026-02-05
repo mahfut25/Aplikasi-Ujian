@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tes Koran - Berbasis Waktu</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #2c3e50, #4a6491);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        
+        h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .subtitle {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .content {
+            padding: 20px;
+        }
+        
+        .screen {
+            display: none;
+        }
+        
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* Form Screen */
+        .form-container {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        
+        .form-input:focus {
+            border-color: #4a6491;
+            outline: none;
+        }
+        
+        .time-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .time-option {
+            padding: 12px;
+            background-color: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .time-option:hover {
+            border-color: #4a6491;
+            background-color: #f0f4f8;
+        }
+        
+        .time-option.active {
+            border-color: #4a6491;
+            background-color: #e8edf5;
+            font-weight: bold;
+        }
+        
+        /* Instruksi Screen */
+        .instructions {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .instructions h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #4a6491;
+            padding-bottom: 5px;
+            text-align: left;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        
+        /* Soal Screen */
+        .question-container {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            text-align: center;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .question-number {
+            font-size: 0.9rem;
+            color: #4a6491;
+            margin-bottom: 10px;
+        }
+        
+        .question {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+        
+        .timer {
+            font-size: 1.2rem;
+            color: #e74c3c;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        .answer-input-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+        
+        .answer-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.5rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .answer-input:focus {
+            border-color: #4a6491;
+            outline: none;
+        }
+        
+        .digit-indicator {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            text-align: center;
+            margin-top: 5px;
+        }
+        
+        /* Button Styles */
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            margin-top: 10px;
+        }
+        
+        .btn-primary {
+            background-color: #4a6491;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2c3e50;
+        }
+        
+        .btn-secondary {
+            background-color: #ecf0f1;
+            color: #2c3e50;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #d5dbdb;
+        }
+        
+        .btn-success {
+            background-color: #27ae60;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #219653;
+        }
+        
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        
+        /* Hasil Screen */
+        .result-summary {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .result-card {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.05);
+        }
+        
+        .result-card h4 {
+            color: #2c3e50;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+        
+        .result-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #4a6491;
+        }
+        
+        .result-value.correct {
+            color: #27ae60;
+        }
+        
+        .result-value.wrong {
+            color: #e74c3c;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .info-value {
+            font-weight: bold;
+            color: #4a6491;
+        }
+        
+        .chart-container {
+            height: 280px;
+            margin-bottom: 25px;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 15px;
+            color: #7f8c8d;
+            font-size: 0.8rem;
+            border-top: 1px solid #ecf0f1;
+            margin-top: 20px;
+        }
+        
+        /* Responsive */
+        @media (min-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .result-summary {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            
+            .time-options {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            
+            .chart-container {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Tes Koran - Berbasis Waktu</h1>
+            <p class="subtitle">Tes kecepatan dan ketelitian kerja dengan analisis interval</p>
+        </header>
+        
+        <div class="content">
+            <!-- Form Screen -->
+            <div id="form-screen" class="screen active">
+                <h2>Pengaturan Tes</h2>
+                <div class="form-container">
+                    <div class="form-group">
+                        <label for="nama-input" class="form-label">Nama Peserta</label>
+                        <input type="text" id="nama-input" class="form-input" placeholder="Masukkan nama Anda" value="">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Waktu Pengerjaan Tes</label>
+                        <div class="time-options">
+                            <div class="time-option active" data-time="1">1 Menit</div>
+                            <div class="time-option" data-time="2">2 Menit</div>
+                            <div class="time-option" data-time="3">3 Menit</div>
+                            <div class="time-option" data-time="5">5 Menit</div>
+                        </div>
+                        <input type="hidden" id="waktu-tes" value="1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="custom-time" class="form-label">Atau Waktu Kustom (menit)</label>
+                        <input type="number" id="custom-time" class="form-input" min="1" max="30" placeholder="Masukkan waktu dalam menit">
+                    </div>
+                </div>
+                
+                <button id="lanjut-instruksi-btn" class="btn btn-primary">Lanjut ke Instruksi</button>
+            </div>
+            
+            <!-- Instruksi Screen -->
+            <div id="instruksi-screen" class="screen">
+                <div class="instructions">
+                    <h3>Instruksi Tes</h3>
+                    <p>Tes ini bertujuan untuk mengukur kemampuan kerja Anda dengan analisis per 30 detik:</p>
+                    <ul>
+                        <li><strong>Kecepatan Kerja</strong>: Jumlah soal yang dapat diselesaikan dalam waktu tertentu</li>
+                        <li><strong>Ketelitian Kerja</strong>: Akurasi jawaban Anda</li>
+                        <li><strong>Keajegan Kerja</strong>: Konsistensi jumlah soal terjawab tiap interval</li>
+                        <li><strong>Ketahanan Kerja</strong>: Kemampuan mempertahankan performa sepanjang tes</li>
+                    </ul>
+                    <p>Aturan tes:</p>
+                    <ul>
+                        <li>Tes berlangsung selama <span id="durasi-tampil">1</span> menit</li>
+                        <li>Soal penjumlahan angka satuan (0-9) akan muncul satu per satu</li>
+                        <li>Soal berubah otomatis setelah Anda menjawab</li>
+                        <li>Jawab dengan mengetikkan <strong>SATUAN</strong> dari hasil penjumlahan</li>
+                        <li>Contoh: 7 + 8 = 15 → jawaban: <strong>5</strong></li>
+                        <li>Hasil akan ditampilkan dengan grafik performa per 30 detik</li>
+                    </ul>
+                </div>
+                <button id="mulai-btn" class="btn btn-primary">Mulai Tes</button>
+                <button id="kembali-form-btn" class="btn btn-secondary">Kembali ke Pengaturan</button>
+            </div>
+            
+            <!-- Soal Screen -->
+            <div id="soal-screen" class="screen">
+                <div class="info-row">
+                    <div>
+                        <span id="nama-tampil"></span>
+                    </div>
+                    <div id="timer" class="timer">Sisa Waktu: <span id="time-left">00:00</span></div>
+                </div>
+                
+                <div class="question-container">
+                    <div class="question-number">Soal ke-<span id="question-number">1</span></div>
+                    <div id="question" class="question">7 + 8 = ?</div>
+                    <div class="timer">Jawaban Benar: <span id="correct-count">0</span></div>
+                </div>
+                
+                <div class="answer-input-container">
+                    <input type="number" id="answer-input" class="answer-input" placeholder="Jawaban" autocomplete="off" min="0" max="9" step="1" inputmode="numeric">
+                    <div class="digit-indicator">Masukkan satu angka (0-9)</div>
+                </div>
+                
+                <button id="selesai-dini-btn" class="btn btn-danger">Selesaikan Tes Sekarang</button>
+            </div>
+            
+            <!-- Hasil Screen -->
+            <div id="hasil-screen" class="screen">
+                <h2>Hasil Tes Koran</h2>
+                
+                <div class="info-row">
+                    <div class="info-label">Nama Peserta:</div>
+                    <div id="hasil-nama" class="info-value"></div>
+                </div>
+                
+                <div class="info-row">
+                    <div class="info-label">Durasi Tes:</div>
+                    <div id="hasil-durasi" class="info-value"></div>
+                </div>
+                
+                <div class="result-summary">
+                    <div class="result-card">
+                        <h4>Total Soal Dijawab</h4>
+                        <div id="total-soal" class="result-value">0</div>
+                    </div>
+                    <div class="result-card">
+                        <h4>Total Benar</h4>
+                        <div id="total-correct" class="result-value correct">0</div>
+                    </div>
+                    <div class="result-card">
+                        <h4>Total Salah</h4>
+                        <div id="total-wrong" class="result-value wrong">0</div>
+                    </div>
+                    <div class="result-card">
+                        <h4>Ketelitian</h4>
+                        <div id="accuracy-score" class="result-value">0%</div>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <h3>Performa per 30 Detik</h3>
+                    <canvas id="performanceChart"></canvas>
+                </div>
+                
+                <div class="result-summary">
+                    <div class="result-card">
+                        <h4>Kecepatan Kerja</h4>
+                        <div id="kecepatan-score" class="result-value">0</div>
+                        <div style="font-size: 0.8rem;">soal/menit</div>
+                    </div>
+                    <div class="result-card">
+                        <h4>Ketelitian Kerja</h4>
+                        <div id="ketelitian-score" class="result-value">0%</div>
+                    </div>
+                    <div class="result-card">
+                        <h4>Keajegan Kerja</h4>
+                        <div id="keajegan-score" class="result-value">0%</div>
+                    </div>
+                    <div class="result-card">
+                        <h4>Ketahanan Kerja</h4>
+                        <div id="ketahanan-score" class="result-value">0%</div>
+                    </div>
+                </div>
+                
+                <button id="ulangi-btn" class="btn btn-primary">Ulangi Tes</button>
+                <button id="awal-btn" class="btn btn-secondary">Kembali ke Awal</button>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Aplikasi Tes Koran Berbasis Waktu &copy; 2023 - Analisis performa per 30 detik</p>
+        </footer>
+    </div>
+
+    <script>
+        // State aplikasi
+        let pesertaNama = "";
+        let testDuration = 0; // dalam detik
+        let remainingTime = 0;
+        let testInterval;
+        let questionTimer;
+        
+        let currentQuestion = 0;
+        let totalCorrect = 0;
+        let totalAnswered = 0;
+        let questions = [];
+        let userAnswers = [];
+        let answerTimes = [];
+        
+        // Data interval 30 detik
+        let intervalData = []; // Array of {time: 30, correct: 0, wrong: 0, total: 0}
+        let currentIntervalIndex = 0;
+        
+        // Elemen DOM
+        const formScreen = document.getElementById('form-screen');
+        const instruksiScreen = document.getElementById('instruksi-screen');
+        const soalScreen = document.getElementById('soal-screen');
+        const hasilScreen = document.getElementById('hasil-screen');
+        
+        // Form elements
+        const namaInput = document.getElementById('nama-input');
+        const waktuTesInput = document.getElementById('waktu-tes');
+        const customTimeInput = document.getElementById('custom-time');
+        const timeOptions = document.querySelectorAll('.time-option');
+        const lanjutInstruksiBtn = document.getElementById('lanjut-instruksi-btn');
+        const kembaliFormBtn = document.getElementById('kembali-form-btn');
+        const durasiTampil = document.getElementById('durasi-tampil');
+        
+        // Soal elements
+        const mulaiBtn = document.getElementById('mulai-btn');
+        const selesaiDiniBtn = document.getElementById('selesai-dini-btn');
+        const questionNumberElement = document.getElementById('question-number');
+        const questionElement = document.getElementById('question');
+        const timeLeftElement = document.getElementById('time-left');
+        const answerInput = document.getElementById('answer-input');
+        const correctCountElement = document.getElementById('correct-count');
+        const namaTampil = document.getElementById('nama-tampil');
+        
+        // Hasil elements
+        const hasilNama = document.getElementById('hasil-nama');
+        const hasilDurasi = document.getElementById('hasil-durasi');
+        const totalSoalElement = document.getElementById('total-soal');
+        const totalCorrectElement = document.getElementById('total-correct');
+        const totalWrongElement = document.getElementById('total-wrong');
+        const accuracyScoreElement = document.getElementById('accuracy-score');
+        
+        // Skor elements
+        const kecepatanScoreElement = document.getElementById('kecepatan-score');
+        const ketelitianScoreElement = document.getElementById('ketelitian-score');
+        const keajeganScoreElement = document.getElementById('keajegan-score');
+        const ketahananScoreElement = document.getElementById('ketahanan-score');
+        
+        const ulangiBtn = document.getElementById('ulangi-btn');
+        const awalBtn = document.getElementById('awal-btn');
+        
+        // Chart
+        let performanceChart;
+        // ========== KODE UNTUK SIMPAN KE SHEET ==========
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby44k7JscIJwzLo7aQAGTYZMaS3hAiUMvVP98-bEqXGH4o3tyG0RvsKgE8jz1hgycVU/exec'; // Ganti dengan URL Anda
+
+// Fungsi untuk menyimpan hasil ke Google Sheets
+async function simpanHasilKeSheet() {
+    // Siapkan data yang akan dikirim
+    const dataToSend = {
+        nama: pesertaNama,
+        totalSoal: totalAnswered,
+        totalBenar: totalCorrect,
+        totalSalah: totalAnswered - totalCorrect,
+        kecepatanKerja: parseFloat(kecepatanScoreElement.textContent),
+        ketelitianKerja: parseFloat(ketelitianScoreElement.textContent),
+        keajeganKerja: parseFloat(keajeganScoreElement.textContent),
+        ketahananKerja: parseFloat(ketahananScoreElement.textContent),
+        durasiTes: testDuration / 60,
+        accuracy: parseFloat(accuracyScoreElement.textContent),
+        intervalData: intervalData
+    };
+
+    // Tampilkan loading
+    const saveButton = document.getElementById('ulangi-btn');
+    const originalText = saveButton.textContent;
+    saveButton.textContent = 'Menyimpan...';
+    saveButton.disabled = true;
+    
+    try {
+        // Kirim data ke Google Apps Script
+        const response = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(dataToSend)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('✅ Hasil tes berhasil disimpan!');
+            console.log('Data tersimpan:', result);
+        } else {
+            alert('❌ Gagal menyimpan: ' + result.message);
+        }
+        
+    } catch (error) {
+        console.error('Error menyimpan data:', error);
+        alert('⚠️ Terjadi kesalahan saat menyimpan data. Coba lagi.');
+    } finally {
+        // Reset tombol
+        saveButton.textContent = originalText;
+        saveButton.disabled = false;
+    }
+}
+
+// Otomatis simpan saat tes selesai
+const originalSelesaikanTes = selesaikanTes;
+selesaikanTes = function() {
+    originalSelesaikanTes();
+    setTimeout(() => {
+        simpanHasilKeSheet();
+    }, 500);
+};
+
+        // Event Listeners
+        lanjutInstruksiBtn.addEventListener('click', lanjutKeInstruksi);
+        kembaliFormBtn.addEventListener('click', kembaliKeForm);
+        mulaiBtn.addEventListener('click', mulaiTes);
+        selesaiDiniBtn.addEventListener('click', selesaikanTes);
+        ulangiBtn.addEventListener('click', ulangiTes);
+        awalBtn.addEventListener('click', kembaliKeAwal);
+        
+        // Pilihan waktu
+        timeOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                // Hapus class active dari semua
+                timeOptions.forEach(opt => opt.classList.remove('active'));
+                
+                // Tambah class active ke yang dipilih
+                this.classList.add('active');
+                
+                // Update nilai waktu
+                waktuTesInput.value = this.getAttribute('data-time');
+                
+                // Reset input kustom
+                customTimeInput.value = '';
+            });
+        });
+        
+        // Input waktu kustom
+        customTimeInput.addEventListener('input', function() {
+            const customTime = parseInt(this.value) || 0;
+            if (customTime >= 1 && customTime <= 30) {
+                // Update pilihan waktu
+                timeOptions.forEach(opt => opt.classList.remove('active'));
+                waktuTesInput.value = customTime;
+                durasiTampil.textContent = customTime;
+            }
+        });
+        
+        // Event listener untuk input jawaban
+        answerInput.addEventListener('input', function() {
+            // Validasi: hanya angka 0-9
+            const value = this.value;
+            if (value.length > 1) {
+                this.value = value.slice(0, 1);
+            }
+            
+            // Jika user sudah memasukkan 1 digit, otomatis lanjut ke soal berikutnya
+            if (this.value.length === 1) {
+                // Beri jeda sebentar agar user bisa melihat jawabannya
+                setTimeout(() => {
+                    lanjutSoal();
+                }, 100);
+            }
+        });
+        
+        // Fungsi untuk lanjut ke instruksi
+        function lanjutKeInstruksi() {
+            // Validasi input
+            pesertaNama = namaInput.value.trim();
+            if (!pesertaNama) {
+                alert("Silakan masukkan nama Anda");
+                namaInput.focus();
+                return;
+            }
+            
+            // Ambil waktu tes
+            let waktuMenit = parseInt(waktuTesInput.value);
+            if (customTimeInput.value) {
+                waktuMenit = parseInt(customTimeInput.value) || waktuMenit;
+            }
+            
+            if (waktuMenit < 1 || waktuMenit > 30) {
+                alert("Waktu tes harus antara 1-30 menit");
+                return;
+            }
+            
+            // Set durasi tes
+            testDuration = waktuMenit * 60; // Konversi ke detik
+            
+            // Update tampilan instruksi
+            durasiTampil.textContent = waktuMenit;
+            
+            // Tampilkan screen instruksi
+            tampilkanScreen(instruksiScreen);
+        }
+        
+        // Fungsi untuk kembali ke form
+        function kembaliKeForm() {
+            tampilkanScreen(formScreen);
+        }
+        
+        // Fungsi untuk kembali ke awal
+        function kembaliKeAwal() {
+            resetTes();
+            tampilkanScreen(formScreen);
+        }
+        
+        // Fungsi untuk membuat soal penjumlahan satuan
+        function buatSoal() {
+            // Buat dua angka satuan (0-9)
+            const num1 = Math.floor(Math.random() * 10);
+            const num2 = Math.floor(Math.random() * 10);
+            
+            // Hitung hasil penjumlahan
+            const sum = num1 + num2;
+            
+            // Ambil satuan dari hasil (angka terakhir)
+            const satuan = sum % 10;
+            
+            return {
+                question: `${num1} + ${num2} = ?`,
+                correctAnswer: satuan,
+                fullAnswer: sum
+            };
+        }
+        
+        // Fungsi untuk memulai tes
+        function mulaiTes() {
+            // Reset state
+            currentQuestion = 0;
+            totalCorrect = 0;
+            totalAnswered = 0;
+            questions = [];
+            userAnswers = [];
+            answerTimes = [];
+            intervalData = [];
+            currentIntervalIndex = 0;
+            
+            // Inisialisasi interval data
+            const jumlahInterval = Math.ceil(testDuration / 30);
+            for (let i = 0; i < jumlahInterval; i++) {
+                intervalData.push({
+                    time: (i + 1) * 30,
+                    correct: 0,
+                    wrong: 0,
+                    total: 0
+                });
+            }
+            
+            // Update tampilan
+            namaTampil.textContent = pesertaNama;
+            correctCountElement.textContent = "0";
+            
+            // Tampilkan screen soal
+            tampilkanScreen(soalScreen);
+            
+            // Mulai timer tes
+            startTestTimer();
+            
+            // Tampilkan soal pertama
+            tampilkanSoal();
+        }
+        
+        // Fungsi untuk memulai timer tes utama
+        function startTestTimer() {
+            remainingTime = testDuration;
+            updateTimerDisplay();
+            
+            testInterval = setInterval(() => {
+                remainingTime--;
+                updateTimerDisplay();
+                
+                // Cek apakah sudah pindah interval (setiap 30 detik)
+                const intervalDetik = testDuration - remainingTime;
+                const newIntervalIndex = Math.floor(intervalDetik / 30);
+                
+                if (newIntervalIndex > currentIntervalIndex && newIntervalIndex < intervalData.length) {
+                    currentIntervalIndex = newIntervalIndex;
+                }
+                
+                if (remainingTime <= 0) {
+                    clearInterval(testInterval);
+                    selesaikanTes();
+                }
+            }, 1000);
+        }
+        
+        // Fungsi untuk update tampilan timer
+        function updateTimerDisplay() {
+            const minutes = Math.floor(remainingTime / 60);
+            const seconds = remainingTime % 60;
+            timeLeftElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        // Fungsi untuk menampilkan soal
+        function tampilkanSoal() {
+            // Buat soal baru
+            const q = buatSoal();
+            questions.push(q);
+            
+            // Update tampilan
+            currentQuestion++;
+            questionNumberElement.textContent = currentQuestion;
+            questionElement.textContent = q.question;
+            
+            // Reset input
+            answerInput.value = '';
+            answerInput.focus();
+        }
+        
+        // Fungsi untuk lanjut ke soal berikutnya
+        function lanjutSoal() {
+            // Catat waktu pengerjaan
+            const now = testDuration - remainingTime;
+            
+            // Catat jawaban user (ambil satuan jika lebih dari 1 digit)
+            const userInput = answerInput.value;
+            const userAnswer = userInput ? parseInt(userInput) % 10 : null;
+            userAnswers.push(userAnswer);
+            
+            // Cek jawaban
+            const currentQIndex = questions.length - 1;
+            const correctAnswer = questions[currentQIndex].correctAnswer;
+            const isCorrect = userAnswer === correctAnswer;
+            
+            // Update total soal
+            totalAnswered++;
+            
+            // Update interval data
+            if (intervalData[currentIntervalIndex]) {
+                intervalData[currentIntervalIndex].total++;
+                
+                if (isCorrect) {
+                    totalCorrect++;
+                    intervalData[currentIntervalIndex].correct++;
+                    correctCountElement.textContent = totalCorrect;
+                } else {
+                    intervalData[currentIntervalIndex].wrong++;
+                }
+            }
+            
+            // Catat waktu
+            answerTimes.push(now);
+            
+            // Lanjut ke soal berikutnya (jika waktu masih ada)
+            if (remainingTime > 0) {
+                tampilkanSoal();
+            }
+        }
+        
+        // Fungsi untuk menyelesaikan tes
+        function selesaikanTes() {
+            // Hentikan timer jika masih berjalan
+            if (testInterval) {
+                clearInterval(testInterval);
+            }
+            
+            // Jika ada soal yang sedang dikerjakan, proses dulu
+            if (answerInput.value) {
+                lanjutSoal();
+            }
+            
+            // Hitung hasil
+            hitungHasil();
+            
+            // Tampilkan screen hasil
+            tampilkanScreen(hasilScreen);
+        }
+        
+        // Fungsi untuk menghitung hasil
+        function hitungHasil() {
+            // Total benar dan salah
+            const totalSoal = totalAnswered;
+            const totalSalah = totalSoal - totalCorrect;
+            const accuracy = totalSoal > 0 ? (totalCorrect / totalSoal * 100) : 0;
+            
+            // Update tampilan hasil
+            hasilNama.textContent = pesertaNama;
+            hasilDurasi.textContent = `${testDuration / 60} menit`;
+            
+            totalSoalElement.textContent = totalSoal;
+            totalCorrectElement.textContent = totalCorrect;
+            totalWrongElement.textContent = totalSalah;
+            accuracyScoreElement.textContent = accuracy.toFixed(1) + '%';
+            
+            // Hitung metrik kemampuan kerja
+            hitungMetrikKerja();
+            
+            // Buat chart
+            buatChart();
+        }
+        
+        // Fungsi untuk menghitung metrik kerja
+        function hitungMetrikKerja() {
+            const totalSoal = totalAnswered;
+            const totalWaktuMenit = testDuration / 60;
+            
+            // 1. Kecepatan Kerja (soal per menit)
+            const kecepatan = totalSoal > 0 ? (totalSoal / totalWaktuMenit) : 0;
+            kecepatanScoreElement.textContent = kecepatan.toFixed(1);
+            
+            // 2. Ketelitian Kerja (persentase benar)
+            const ketelitian = totalSoal > 0 ? (totalCorrect / totalSoal * 100) : 0;
+            ketelitianScoreElement.textContent = ketelitian.toFixed(1) + '%';
+            
+            // 3. Keajegan Kerja (konsistensi per interval)
+            let keajegan = 0;
+            const intervalDenganSoal = intervalData.filter(interval => interval.total > 0);
+            
+            if (intervalDenganSoal.length > 1) {
+                // Hitung rata-rata soal per interval
+                const rataRata = intervalDenganSoal.reduce((sum, interval) => sum + interval.total, 0) / intervalDenganSoal.length;
+                
+                // Hitung deviasi
+                const deviasi = Math.sqrt(
+                    intervalDenganSoal.reduce((sum, interval) => sum + Math.pow(interval.total - rataRata, 2), 0) / intervalDenganSoal.length
+                );
+                
+                // Semakin kecil deviasi, semakin ajeg (skor 0-100)
+                keajegan = Math.max(0, 100 - (deviasi / rataRata * 100));
+            } else if (intervalDenganSoal.length === 1) {
+                keajegan = 100; // Hanya satu interval, dianggap ajeg sempurna
+            }
+            
+            keajeganScoreElement.textContent = keajegan.toFixed(1) + '%';
+            
+            // 4. Ketahanan Kerja (performa di paruh akhir vs paruh awal)
+            let ketahanan = 0;
+            const intervalCount = intervalDenganSoal.length;
+            
+            if (intervalCount >= 2) {
+                const paruhAwal = Math.floor(intervalCount / 2);
+                const paruhAkhir = intervalCount - paruhAwal;
+                
+                let totalAwal = 0;
+                let totalAkhir = 0;
+                
+                for (let i = 0; i < paruhAwal; i++) {
+                    totalAwal += intervalDenganSoal[i].correct;
+                }
+                
+                for (let i = paruhAwal; i < intervalCount; i++) {
+                    totalAkhir += intervalDenganSoal[i].correct;
+                }
+                
+                const rataAwal = paruhAwal > 0 ? totalAwal / paruhAwal : 0;
+                const rataAkhir = paruhAkhir > 0 ? totalAkhir / paruhAkhir : 0;
+                
+                // Jika performa di paruh akhir sama atau lebih baik, ketahanan tinggi
+                if (rataAwal > 0) {
+                    ketahanan = Math.min(100, (rataAkhir / rataAwal) * 100);
+                } else {
+                    ketahanan = rataAkhir > 0 ? 100 : 0;
+                }
+            } else if (intervalCount === 1) {
+                ketahanan = 100; // Hanya satu interval, dianggap tahan sempurna
+            }
+            
+            ketahananScoreElement.textContent = ketahanan.toFixed(1) + '%';
+        }
+        
+        // Fungsi untuk membuat chart garis performa
+        function buatChart() {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            
+            // Filter interval yang memiliki data
+            const filteredIntervals = intervalData.filter(interval => interval.total > 0);
+            
+            if (filteredIntervals.length === 0) {
+                // Jika tidak ada data, tampilkan pesan
+                ctx.font = "16px Arial";
+                ctx.fillStyle = "#7f8c8d";
+                ctx.textAlign = "center";
+                ctx.fillText("Tidak ada data untuk ditampilkan", 150, 125);
+                return;
+            }
+            
+            // Siapkan data untuk chart
+            const labels = filteredIntervals.map(interval => {
+                const menit = Math.floor(interval.time / 60);
+                const detik = interval.time % 60;
+                return detik === 0 ? `${menit}:00` : `${menit}:${detik.toString().padStart(2, '0')}`;
+            });
+            
+            const dataBenar = filteredIntervals.map(interval => interval.correct);
+            const dataSalah = filteredIntervals.map(interval => interval.wrong);
+            
+            // Hapus chart sebelumnya jika ada
+            if (performanceChart) {
+                performanceChart.destroy();
+            }
+            
+            performanceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Soal Benar',
+                            data: dataBenar,
+                            borderColor: '#27ae60',
+                            backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                            borderWidth: 3,
+                            fill: false,
+                            tension: 0.2
+                        },
+                        {
+                            label: 'Soal Salah',
+                            data: dataSalah,
+                            borderColor: '#e74c3c',
+                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                            borderWidth: 3,
+                            fill: false,
+                            tension: 0.2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Jumlah Soal'
+                            },
+                            ticks: {
+                                stepSize: 1
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Waktu Tes (setiap 30 detik)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                pointStyle: 'circle'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const datasetLabel = context.dataset.label || '';
+                                    const value = context.parsed.y;
+                                    const total = filteredIntervals[context.dataIndex].total;
+                                    const percentage = total > 0 ? (value / total * 100).toFixed(1) + '%' : '0%';
+                                    return `${datasetLabel}: ${value} soal (${percentage})`;
+                                }
+                            }
+                        }
+                    },
+                    elements: {
+                        point: {
+                            radius: 5,
+                            hoverRadius: 7
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Fungsi untuk mengulangi tes
+        function ulangiTes() {
+            // Reset tes
+            resetTes();
+            
+            // Tampilkan screen instruksi
+            tampilkanScreen(instruksiScreen);
+        }
+        
+        // Fungsi untuk reset tes
+        function resetTes() {
+            // Hentikan semua timer
+            if (testInterval) clearInterval(testInterval);
+            if (questionTimer) clearInterval(questionTimer);
+            
+            // Reset state
+            currentQuestion = 0;
+            totalCorrect = 0;
+            totalAnswered = 0;
+            questions = [];
+            userAnswers = [];
+            answerTimes = [];
+            intervalData = [];
+            currentIntervalIndex = 0;
+            
+            // Reset input
+            answerInput.value = '';
+        }
+        
+        // Fungsi untuk menampilkan screen tertentu
+        function tampilkanScreen(screen) {
+            // Sembunyikan semua screen
+            formScreen.classList.remove('active');
+            instruksiScreen.classList.remove('active');
+            soalScreen.classList.remove('active');
+            hasilScreen.classList.remove('active');
+            
+            // Tampilkan screen yang dipilih
+            screen.classList.add('active');
+        }
+        
+        // Inisialisasi
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set waktu default
+            waktuTesInput.value = 1;
+            durasiTampil.textContent = 1;
+        });
+    </script>
+</body>
+</html>
