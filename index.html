@@ -15,72 +15,72 @@ Token <input id="token"><br>
 
 <div id="ujian" style="display:none">
 <h3 id="identitas"></h3>
-<div id="timer"></div>
 <div id="soal"></div>
 <button onclick="submit()">Selesai</button>
 </div>
 
 <script>
-const API="https://script.google.com/macros/s/AKfycbyBjQVE8cnvc9e_zZW6Umvf_52Tgurhdoy8zlSENfbnp6-HFGPp6UDMK1GUc9U-9bE/exec";
+const API="https://script.google.com/macros/s/AKfycby-4PUJRxpcHnO2nxafjD6XByTmrgRhou98cpYFX6I4TV8BAxNs9_NH5l5OUfxmq8zS/exec";
 
-let NIS="", startTime=0;
+let NIS="";
 
-function login(){
-fetch(API+`?action=login&nis=${nis.value}&token=${token.value}`)
-.then(r=>r.json())
-.then(res=>{
- if(res.status=="OK"){
-   NIS=nis.value;
-   identitas.innerText=res.nama+" - "+res.kelas;
-   document.getElementById("ujian").style.display="block";
-   startTime=Date.now();
-   timerMulai();
-   loadSoal();
- } else alert(res.status);
-});
+function getJSON(url){
+  return fetch(url,{
+    method:"GET",
+    mode:"no-cors"
+  })
 }
 
-function loadSoal(){
-fetch(API+"?action=getSoal")
-.then(r=>r.json())
-.then(data=>{
- let html="";
- data.forEach((s,i)=>{
-   html+=`<p>${i+1}. ${s.soal}</p>`;
-   s.opsi.forEach(o=>{
-     html+=`
-     <input type="radio" name="${s.id}"
-     onchange="save(${s.id},'${o.k}')">
-     ${o.k}. ${o.v}<br>`;
-   });
- });
- soal.innerHTML=html;
-});
+async function login(){
+  let url = API + "?action=login&nis="+nis.value+"&token="+token.value;
+
+  let response = await fetch(url);
+  let text = await response.text();
+
+  try{
+    let res = JSON.parse(text);
+    if(res.status=="OK"){
+      NIS=nis.value;
+      identitas.innerText=res.nama+" - "+res.kelas;
+      document.getElementById("ujian").style.display="block";
+      loadSoal();
+    }else{
+      alert(res.status);
+    }
+  }catch(e){
+    alert("Script belum di-deploy dengan benar.");
+  }
+}
+
+async function loadSoal(){
+  let response = await fetch(API+"?action=getSoal");
+  let text = await response.text();
+  let data = JSON.parse(text);
+
+  let html="";
+  data.forEach((s,i)=>{
+    html+=`<p>${i+1}. ${s.soal}</p>`;
+    s.opsi.forEach(o=>{
+      html+=`
+      <input type="radio" name="${s.id}"
+      onchange="save(${s.id},'${o.k}')">
+      ${o.k}. ${o.v}<br>`;
+    });
+  });
+  soal.innerHTML=html;
 }
 
 function save(id,j){
-fetch(API+`?action=save&nis=${NIS}&id=${id}&jawab=${j}`);
+  fetch(API+`?action=save&nis=${NIS}&id=${id}&jawab=${j}`);
 }
 
-function submit(){
-fetch(API+`?action=submit&nis=${NIS}`)
-.then(r=>r.json())
-.then(res=>alert("Skor: "+res.skor));
+async function submit(){
+  let response = await fetch(API+`?action=submit&nis=${NIS}`);
+  let text = await response.text();
+  let res = JSON.parse(text);
+  alert("Skor: "+res.skor);
 }
-
-function timerMulai(){
-let s=3600;
-setInterval(()=>{
- let m=Math.floor(s/60);
- let d=s%60;
- timer.innerText="Waktu: "+m+":"+d;
- if(--s<=0) submit();
-},1000);
-}
-
-window.onbeforeunload=()=>"Ujian belum selesai!";
-document.oncontextmenu=()=>false;
-document.oncopy=()=>false;
 </script>
+
 </body>
 </html>
