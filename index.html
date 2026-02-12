@@ -1,84 +1,244 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CBT Sekolah</title>
+
+<style>
+body{
+    margin:0;
+    font-family:'Segoe UI',sans-serif;
+    background:linear-gradient(135deg,#667eea,#764ba2);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+
+.container{
+    background:white;
+    width:95%;
+    max-width:1000px;
+    padding:25px;
+    border-radius:12px;
+    box-shadow:0 15px 40px rgba(0,0,0,0.2);
+}
+
+.hidden{display:none}
+
+.header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.timer{
+    font-weight:bold;
+    color:red;
+}
+
+.layout{
+    display:flex;
+    gap:20px;
+    margin-top:20px;
+}
+
+.soal-area{
+    flex:3;
+}
+
+.nav-area{
+    flex:1;
+    border-left:1px solid #ddd;
+    padding-left:15px;
+}
+
+.soal-card{
+    background:#f9f9f9;
+    padding:20px;
+    border-radius:8px;
+}
+
+.opsi{
+    background:white;
+    padding:10px;
+    border-radius:6px;
+    margin:10px 0;
+    cursor:pointer;
+    border:2px solid #eee;
+    transition:0.2s;
+}
+
+.opsi:hover{
+    border-color:#667eea;
+}
+
+.opsi.selected{
+    background:#667eea;
+    color:white;
+    border-color:#667eea;
+}
+
+.nomor-grid{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:8px;
+}
+
+.nomor{
+    padding:10px;
+    text-align:center;
+    background:#eee;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+.nomor.active{
+    background:#667eea;
+    color:white;
+}
+
+.nomor.done{
+    background:#4CAF50;
+    color:white;
+}
+button{
+    margin-top:15px;
+    padding:10px 15px;
+    border:none;
+    background:#667eea;
+    color:white;
+    border-radius:6px;
+    cursor:pointer;
+}
+</style>
 </head>
 <body>
 
-<h2>LOGIN CBT</h2>
-NIS <input id="nis"><br>
-Token <input id="token"><br>
+<div class="container" id="loginPage">
+<h2>Login CBT</h2>
+<input id="nis" placeholder="NIS">
+<input id="token" placeholder="Token">
 <button onclick="login()">Masuk</button>
+</div>
 
-<hr>
-
-<div id="ujian" style="display:none">
+<div class="container hidden" id="ujianPage">
+<div class="header">
 <h3 id="identitas"></h3>
-<div id="soal"></div>
-<button onclick="submit()">Selesai</button>
+<div class="timer" id="timer">60:00</div>
+</div>
+
+<div class="layout">
+<div class="soal-area">
+<div id="soalBox"></div>
+<button onclick="submit()">Selesai Ujian</button>
+</div>
+
+<div class="nav-area">
+<h4>Daftar Soal</h4>
+<div class="nomor-grid" id="navSoal"></div>
+</div>
+</div>
 </div>
 
 <script>
 const API="https://script.google.com/macros/s/AKfycby-4PUJRxpcHnO2nxafjD6XByTmrgRhou98cpYFX6I4TV8BAxNs9_NH5l5OUfxmq8zS/exec";
 
 let NIS="";
+let soalData=[];
+let current=0;
+let jawaban={};
+let waktu=3600;
 
-function getJSON(url){
-  return fetch(url,{
-    method:"GET",
-    mode:"no-cors"
-  })
-}
-
+// LOGIN
 async function login(){
-  let url = API + "?action=login&nis="+nis.value+"&token="+token.value;
+let res=await fetch(API+`?action=login&nis=${nis.value}&token=${token.value}`);
+let text=await res.text();
+let data=JSON.parse(text);
 
-  let response = await fetch(url);
-  let text = await response.text();
-
-  try{
-    let res = JSON.parse(text);
-    if(res.status=="OK"){
-      NIS=nis.value;
-      identitas.innerText=res.nama+" - "+res.kelas;
-      document.getElementById("ujian").style.display="block";
-      loadSoal();
-    }else{
-      alert(res.status);
-    }
-  }catch(e){
-    alert("Script belum di-deploy dengan benar.");
-  }
+if(data.status=="OK"){
+NIS=nis.value;
+loginPage.classList.add("hidden");
+ujianPage.classList.remove("hidden");
+identitas.innerText=data.nama+" - "+data.kelas;
+loadSoal();
+startTimer();
+}else alert(data.status);
 }
 
+// LOAD SOAL
 async function loadSoal(){
-  let response = await fetch(API+"?action=getSoal");
-  let text = await response.text();
-  let data = JSON.parse(text);
-
-  let html="";
-  data.forEach((s,i)=>{
-    html+=`<p>${i+1}. ${s.soal}</p>`;
-    s.opsi.forEach(o=>{
-      html+=`
-      <input type="radio" name="${s.id}"
-      onchange="save(${s.id},'${o.k}')">
-      ${o.k}. ${o.v}<br>`;
-    });
-  });
-  soal.innerHTML=html;
+let res=await fetch(API+"?action=getSoal");
+let text=await res.text();
+soalData=JSON.parse(text);
+renderNav();
+tampilSoal(0);
 }
 
-function save(id,j){
-  fetch(API+`?action=save&nis=${NIS}&id=${id}&jawab=${j}`);
+// RENDER NAVIGASI
+function renderNav(){
+let html="";
+soalData.forEach((s,i)=>{
+html+=`<div class="nomor" id="nav${i}" onclick="tampilSoal(${i})">${i+1}</div>`;
+});
+navSoal.innerHTML=html;
 }
 
+// TAMPIL SOAL
+function tampilSoal(index){
+current=index;
+let s=soalData[index];
+
+document.querySelectorAll(".nomor").forEach(n=>n.classList.remove("active"));
+document.getElementById("nav"+index).classList.add("active");
+
+let html=`<div class="soal-card">
+<p><b>${index+1}. ${s.soal}</b></p>`;
+
+s.opsi.forEach(o=>{
+let selected=jawaban[s.id]==o.k?"selected":"";
+html+=`<div class="opsi ${selected}" onclick="pilih(this,${s.id},'${o.k}')">
+${o.v}
+</div>`;
+});
+
+html+=`</div>`;
+soalBox.innerHTML=html;
+}
+
+// PILIH JAWABAN
+function pilih(el,id,k){
+jawaban[id]=k;
+
+document.querySelectorAll(".opsi").forEach(o=>o.classList.remove("selected"));
+el.classList.add("selected");
+
+let idx=current;
+document.getElementById("nav"+idx).classList.add("done");
+
+fetch(API+`?action=save&nis=${NIS}&id=${id}&jawab=${k}`);
+}
+
+// TIMER
+function startTimer(){
+setInterval(()=>{
+let m=Math.floor(waktu/60);
+let s=waktu%60;
+timer.innerText=m+":"+(s<10?"0"+s:s);
+waktu--;
+if(waktu<=0) submit();
+},1000);
+}
+
+// SUBMIT
 async function submit(){
-  let response = await fetch(API+`?action=submit&nis=${NIS}`);
-  let text = await response.text();
-  let res = JSON.parse(text);
-  alert("Skor: "+res.skor);
+if(!confirm("Yakin selesai?")) return;
+let res=await fetch(API+`?action=submit&nis=${NIS}`);
+let text=await res.text();
+let data=JSON.parse(text);
+alert("Skor Anda: "+data.skor);
+location.reload();
 }
 </script>
 
